@@ -25,6 +25,7 @@ class TodoList extends StatefulWidget {
 
 class _ToDoListState extends State<TodoList> {
   final collection = FirebaseFirestore.instance.collection('items');
+  final inputController = TextEditingController();
 
   @override
   void initState() {
@@ -39,28 +40,60 @@ class _ToDoListState extends State<TodoList> {
     }) ;
   }
   Widget build(BuildContext context) {
-    final collection = FirebaseFirestore.instance.collection('test1');
-    return Scaffold(
+    final collection = FirebaseFirestore.instance.collection('items');
 
+    return Scaffold(
         appBar: AppBar(
           title: Text('Todo List'),
         ),
-        body: Row(
+        body: Column(
+
           children: [
-            ElevatedButton(
-              onPressed: () async {
-                await collection.add({'name': "hello"});
-              },
-              child: Text(
-                "Add Here"
-              )
-            ),
             StreamBuilder(
               stream: collection.snapshots(),
               builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (!snapshot.hasData) return Text("Loading");
-                return Text((snapshot.data as QuerySnapshot).docs[0]['test2']);
+                return Flexible(
+                  child: Container(
+                    margin: EdgeInsets.all(5.0),
+                    height: 295.0,
+                    width: 333.0,
+                    child: ListView.builder(
+                        padding: const EdgeInsets.all(8),
+                        itemCount: (snapshot.data as QuerySnapshot).docs.length,
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
+                        itemBuilder: (BuildContext context, int index) {
+                          return TextButton(
+                              onPressed: () => _removeItem((snapshot.data as QuerySnapshot).docs[index].id),
+                              child: Text((snapshot.data as QuerySnapshot).docs[index]['val']));
+                        }
+                    ),
+                  ),
+                );
               },)
+          ,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 300,
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      hintText: 'Add new todo'
+                    ),
+                    controller: inputController,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await collection.add({'val': inputController.text});
+                  },
+                  child: Text(
+                      "Add Here"
+                  )
+              )],
+            ),
           ]
         )
 
@@ -73,6 +106,11 @@ class _ToDoListState extends State<TodoList> {
         //   ,
         // )
     );
+  }
+
+
+  _removeItem(id) {
+    collection.doc(id).delete();
   }
 }
 
