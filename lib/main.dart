@@ -46,55 +46,63 @@ class _ToDoListState extends State<TodoList> {
         appBar: AppBar(
           title: Text('Todo List'),
         ),
-        body: Column(
+        body: Center(
+          child: Column(
 
-          children: [
-            StreamBuilder(
-              stream: collection.snapshots(),
-              builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (!snapshot.hasData) return Text("Loading");
-                return Flexible(
-                  child: Container(
-                    margin: EdgeInsets.all(5.0),
-                    height: 295.0,
-                    width: 333.0,
-                    child: ListView.builder(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: (snapshot.data as QuerySnapshot).docs.length,
-                        scrollDirection: Axis.vertical,
-                        shrinkWrap: true,
-                        itemBuilder: (BuildContext context, int index) {
-                          return TextButton(
-                              onPressed: () => _removeItem((snapshot.data as QuerySnapshot).docs[index].id),
-                              child: Text((snapshot.data as QuerySnapshot).docs[index]['val']));
-                        }
+            children: [
+              StreamBuilder(
+                stream: collection.snapshots(),
+                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (!snapshot.hasData) return Text("Loading");
+                  return Flexible(
+                    child: Container(
+
+                      height: 600.0,
+
+                      child: ListView.builder(
+
+                          itemCount: (snapshot.data as QuerySnapshot).docs.length,
+                          scrollDirection: Axis.vertical,
+
+                          itemBuilder: (BuildContext context, int index) {
+                            return Dismissible(
+                              key: Key((snapshot.data as QuerySnapshot).docs[index].id),
+                              background: Container(color: Colors.red),
+                              onDismissed: (both) => _removeItem((snapshot.data as QuerySnapshot).docs[index].id),
+                              child: TextButton(
+                                  onPressed: () => _removeItem((snapshot.data as QuerySnapshot).docs[index].id),
+                                  child: Text((snapshot.data as QuerySnapshot).docs[index]['val'])),
+                            );
+                          }
+                      ),
+                    ),
+                  );
+                },)
+            ,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 300,
+                    child: TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: 'Add new todo'
+                      ),
+                      controller: inputController,
                     ),
                   ),
-                );
-              },)
-          ,
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 300,
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      hintText: 'Add new todo'
-                    ),
-                    controller: inputController,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    await collection.add({'val': inputController.text});
-                  },
-                  child: Text(
-                      "Add Here"
-                  )
-              )],
-            ),
-          ]
+                  ElevatedButton(
+                    onPressed: () async {
+                      await collection.add({'val': inputController.text});
+                      inputController.clear();
+                    },
+                    child: Text(
+                        "Add Here"
+                    )
+                )],
+              ),
+            ]
+          ),
         )
 
         // body: StreamBuilder(
