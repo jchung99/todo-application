@@ -1,126 +1,123 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'todo_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp();
-  runApp(ToDo());
-
+  runApp(
+    ProviderScope(
+      child: ToDo(),
+    ),
+  );
 }
 
 class ToDo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: TodoList());
+    return MaterialApp(
+      theme: ThemeData(
+          ),
+      home: new LogIn(),
+    );
   }
 }
 
-class TodoList extends StatefulWidget {
-  @override
-
-  _ToDoListState createState() => _ToDoListState();
-}
-
-class _ToDoListState extends State<TodoList> {
-  final collection = FirebaseFirestore.instance.collection('items');
-  final inputController = TextEditingController();
+class LogIn extends ConsumerWidget {
+  static var userName = "";
+  static var password = "";
+  final passwordProvider = Provider((ref) => password);
+  final userNameController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
-  void initState() {
-    getData();
-    super.initState();
-  }
-  getData() {
-    collection.get().then((QuerySnapshot snapshot) {
-      snapshot.docs.forEach((DocumentSnapshot doc) {
-        print(5);
-      });
-    }) ;
-  }
-  Widget build(BuildContext context) {
-    final collection = FirebaseFirestore.instance.collection('items');
-
-    return Scaffold(
-        appBar: AppBar(
-          title: Text('Todo List'),
-        ),
+  Widget build(BuildContext context, ScopedReader watch) {
+    final passwordString = watch(passwordProvider);
+    return Center(
+      child: Scaffold(
+        backgroundColor: Colors.blueGrey,
         body: Center(
-          child: Column(
-
-            children: [
-              StreamBuilder(
-                stream: collection.snapshots(),
-                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                  if (!snapshot.hasData) return Text("Loading");
-                  return Flexible(
-                    child: Container(
-
-                      height: 600.0,
-
-                      child: ListView.builder(
-
-                          itemCount: (snapshot.data as QuerySnapshot).docs.length,
-                          scrollDirection: Axis.vertical,
-
-                          itemBuilder: (BuildContext context, int index) {
-                            return Dismissible(
-                              key: Key((snapshot.data as QuerySnapshot).docs[index].id),
-                              background: Container(color: Colors.red),
-                              onDismissed: (both) => _removeItem((snapshot.data as QuerySnapshot).docs[index].id),
-                              child: TextButton(
-                                  onPressed: () => _removeItem((snapshot.data as QuerySnapshot).docs[index].id),
-                                  child: Text((snapshot.data as QuerySnapshot).docs[index]['val'])),
-                            );
-                          }
+          child: Container(
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  "Welcome! Please enter your name and password.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 30
+                  ),
+                ),
+                SizedBox(height: 100),
+                Padding(
+                  padding:EdgeInsets.all(10),
+                  child: TextField(
+                    obscureText: false,
+                    style: TextStyle(fontSize: 20),
+                    controller: userNameController,
+                    decoration: InputDecoration(
+                      hintText: "Name",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
                       ),
-                    ),
-                  );
-                },)
-            ,
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 300,
-                    child: TextFormField(
-                      decoration: const InputDecoration(
-                        hintText: 'Add new todo'
-                      ),
-                      controller: inputController,
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      await collection.add({'val': inputController.text});
-                      inputController.clear();
-                    },
-                    child: Text(
-                        "Add Here"
-                    )
-                )],
-              ),
-            ]
-          ),
-        )
+                ),
+                SizedBox(height: 10),
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: TextField(
+                    obscureText: true,
+                    style: TextStyle(fontSize: 20),
+                    controller: passwordController,
 
-        // body: StreamBuilder(
-        //   stream: FirebaseFirestore.instance.collection('items').snapshots(),
-        //   builder: (context, snapshot) {
-        //     if (!snapshot.hasData) return const Text('Loading');
-        //     return Text((snapshot.data as QuerySnapshot).docs[0].get('1'));
-        //   }
-        //   ,
-        // )
+                    decoration: InputDecoration(
+                      hintText: "Password",
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(width: 10),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Material(
+                  elevation: 5,
+                  borderRadius: BorderRadius.circular(30),
+                  color: Colors.cyan,
+                  child: MaterialButton(
+                      onPressed: () => nextPage(userNameController.text, passwordController.text, context) ,
+                    child: Text(
+                      "Login",
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 15.0,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
 
-  _removeItem(id) {
-    collection.doc(id).delete();
+  nextPage(name, pass, context) {
+    userName = name;
+    password = pass;
+    Navigator.push(
+      context,
+      new MaterialPageRoute(builder: (context) => new TodoList()),
+    );
   }
 }
-
-
 
