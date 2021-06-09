@@ -91,6 +91,7 @@ class LogIn extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(30),
                   color: Colors.cyan,
                   child: MaterialButton(
+                    key: Key("Submit"),
                       onPressed: () => nextPage(userNameController.text, passwordController.text, context) ,
                     child: Text(
                       "Login",
